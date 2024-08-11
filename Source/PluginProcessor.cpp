@@ -254,9 +254,10 @@ void ChopChopAudioProcessor::chopFile()
     range.setRange(0, 128, true);
 
     juce::WavAudioFormat format;
-    juce::File file;
+    auto directory = getNewFileLocation();
+    auto file = directory.getChildFile("gen.wav");
     std::unique_ptr<juce::AudioFormatWriter> writer;
-    writer.reset(format.createWriterFor(new juce::FileOutputStream(file),
+    writer.reset(format.createWriterFor(new juce::FileOutputStream(file), //need to write to a path, and then call that path again.
         48000.0,
         waveform.getNumChannels(),
         24,
@@ -267,7 +268,26 @@ void ChopChopAudioProcessor::chopFile()
 
     reader = manager.createReaderFor(file);
 
+    sampler.clearSounds();
     sampler.addSound(new juce::SamplerSound("sample", *reader, range, 60, .01, .01, 30));
+}
+
+juce::File ChopChopAudioProcessor::getNewFileLocation()
+{
+    //windows
+    auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("Application Support").getChildFile(ProjectInfo::companyName);
+    auto pluginFolder = kitikFolder.getChildFile(ProjectInfo::projectName);
+    auto generatedSamples = pluginFolder.getChildFile("GeneratedSamples");
+
+    if (!generatedSamples.exists())
+        generatedSamples.createDirectory();
+
+    auto testFile = generatedSamples.getChildFile("gen.wav");
+    if (testFile.exists())
+        testFile.deleteFile(); //delete file causes it to crash, may just have to skip and have it start generating new files everytime. 
+                               //should make getting history easier than expected...
+
+    return generatedSamples;
 }
 
 //==============================================================================

@@ -59,6 +59,7 @@ public:
     void loadFile(const juce::String&);
     juce::AudioBuffer<float>& getWaveform() { return waveform; }
     void chopFile();
+    juce::File getNewFileLocation();
 
 private:
 

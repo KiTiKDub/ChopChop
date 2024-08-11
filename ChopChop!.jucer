@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="nQXO9O" name="ChopChop!" projectType="audioplug" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn">
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
+              companyName="KiTiK Music">
   <MAINGROUP id="RzLWlR" name="ChopChop!">
     <GROUP id="{4D32DFA1-AA03-280A-9330-6D466F714EBB}" name="Source">
       <GROUP id="{FC2AE34E-9EA1-F35F-8D29-EC360E7492EC}" name="GUI">
