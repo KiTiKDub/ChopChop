@@ -25,9 +25,6 @@ ChopChopAudioProcessor::ChopChopAudioProcessor()
 {
 
     chops = dynamic_cast<juce::AudioParameterInt*>(apvts.getParameter("chops"));
-    history = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("history"));
-    chopChop = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("chopChop"));
-    playback = dynamic_cast<juce::AudioParameterBool*>(apvts.getParameter("playback"));
 
     sampler.addVoice(new juce::SamplerVoice());
     manager.registerBasicFormats();
@@ -36,7 +33,11 @@ ChopChopAudioProcessor::ChopChopAudioProcessor()
 
 ChopChopAudioProcessor::~ChopChopAudioProcessor()
 {
-    reader = nullptr;
+    sampler.clearSounds();
+    sampler.clearVoices();
+
+    auto directory = getNewFileLocation();
+    directory.deleteRecursively(false);
 }
 
 //==============================================================================
@@ -182,9 +183,6 @@ juce::AudioProcessorValueTreeState::ParameterLayout ChopChopAudioProcessor::crea
     AudioProcessorValueTreeState::ParameterLayout layout;
 
     layout.add(std::make_unique<AudioParameterInt>("chops", "Chops", 1, 100, 5));
-    layout.add(std::make_unique<AudioParameterBool>("chopChop", "Chop Chop!", false));
-    layout.add(std::make_unique<AudioParameterBool>("history", "History", false));
-    layout.add(std::make_unique<AudioParameterBool>("playback", "Playback", false));
 
     return layout;
 }
@@ -193,8 +191,9 @@ void ChopChopAudioProcessor::loadFile(const juce::String& path)
 {
     sampler.clearSounds();
 
-    auto file = juce::File(path);
-    reader = manager.createReaderFor(file);
+    orignalFile = juce::File(path);
+    reader.reset(manager.createReaderFor(orignalFile));
+    filesLoaded++;
 
     int length = static_cast<int>(reader->lengthInSamples);
     waveform.setSize(1,length);
@@ -230,7 +229,6 @@ void ChopChopAudioProcessor::chopFile()
             holder.clear();
             i = 0;
         }
-
     }
 
     //Shuffle
@@ -244,50 +242,81 @@ void ChopChopAudioProcessor::chopFile()
     for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
     {
         auto read = audioBuffers[buffer].getReadPointer(0);
-        //auto range = audioBuffers[buffer].findMinMax(0, 0, audioBuffers[buffer].getNumSamples());
-        //auto check = range.clipValue(0);
         auto length = audioBuffers[buffer].getNumSamples();
         waveform.addFrom(0, length * buffer, audioBuffers[buffer], 0, 0, length);
     }
 
-    juce::BigInteger range;
-    range.setRange(0, 128, true);
+    auto fileName = getNewFileName();
+    writeChoppedFile(fileName);
+    readChoppedFile(fileName);
+}
 
-    juce::WavAudioFormat format;
-    auto directory = getNewFileLocation();
-    auto file = directory.getChildFile("gen.wav");
-    std::unique_ptr<juce::AudioFormatWriter> writer;
-    writer.reset(format.createWriterFor(new juce::FileOutputStream(file), //need to write to a path, and then call that path again.
-        48000.0,
-        waveform.getNumChannels(),
-        24,
-        {},
-        0));
-    if (writer != nullptr)
-        writer->writeFromAudioSampleBuffer(waveform, 0, waveform.getNumSamples());
-
-    reader = manager.createReaderFor(file);
-
-    sampler.clearSounds();
-    sampler.addSound(new juce::SamplerSound("sample", *reader, range, 60, .01, .01, 30));
+juce::StringArray ChopChopAudioProcessor::getCurrentFile()
+{
+    return currentFile;
 }
 
 juce::File ChopChopAudioProcessor::getNewFileLocation()
 {
-    //windows
+    #if JUCE_WINDOWS
     auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("Application Support").getChildFile(ProjectInfo::companyName);
+    #elif JUCE_MAC
+    auto kitikFolder  = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(ProjectInfo::companyName);
+    #endif
+
     auto pluginFolder = kitikFolder.getChildFile(ProjectInfo::projectName);
     auto generatedSamples = pluginFolder.getChildFile("GeneratedSamples");
 
     if (!generatedSamples.exists())
         generatedSamples.createDirectory();
 
-    auto testFile = generatedSamples.getChildFile("gen.wav");
-    if (testFile.exists())
-        testFile.deleteFile(); //delete file causes it to crash, may just have to skip and have it start generating new files everytime. 
-                               //should make getting history easier than expected...
-
     return generatedSamples;
+}
+
+juce::String ChopChopAudioProcessor::getNewFileName()
+{
+    if (filesChopped < filesLoaded)
+    {
+        calls = 0;
+        filesChopped++;
+    }
+        
+    calls++;
+    auto originalName = orignalFile.getFileNameWithoutExtension(); //need to do check to reset calls
+    juce::String fileName = originalName + " v" + (juce::String)calls + ".wav";
+
+    return fileName;
+}
+
+void ChopChopAudioProcessor::writeChoppedFile(juce::String& fileName)
+{
+    juce::WavAudioFormat format;
+    auto directory = getNewFileLocation();
+    auto file = directory.getChildFile(fileName);
+    if (file.exists())
+        file.deleteFile();
+    std::unique_ptr<juce::AudioFormatWriter> writer;
+    writer.reset(format.createWriterFor(new juce::FileOutputStream(file),
+        48000.0,
+        1,
+        24,
+        {},
+        0));
+    if (writer != nullptr)
+        writer->writeFromAudioSampleBuffer(waveform, 0, waveform.getNumSamples());
+}
+
+void ChopChopAudioProcessor::readChoppedFile(juce::String& fileName)
+{
+    auto file = getNewFileLocation().getChildFile(fileName);
+    currentFile = file.getFullPathName();
+
+    juce::BigInteger range;
+    range.setRange(0, 128, true);
+
+    sampler.clearSounds();
+    reader.reset(manager.createReaderFor(file));
+    sampler.addSound(new juce::SamplerSound(fileName, *reader, range, 60, .01, .01, 30));
 }
 
 //==============================================================================

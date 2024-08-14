@@ -12,8 +12,7 @@
 //==============================================================================
 ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p), chopsAT(p.apvts, "chops", chops),
-    historyAT(p.apvts, "history", history), playbackAT(p.apvts, "playback", playback),
-    chopChopAT(p.apvts, "chopChop", chopChop), dnd(p)
+      dnd(p)
 {
     setSize (500, 250);
 
@@ -22,18 +21,24 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
 
     chopChop.setButtonText("Chop Chop!");
     history.setButtonText("History");
-    playback.setButtonText("Playback");
+    dragToDaw.setButtonText("Drag to DAW");
 
     chopChop.onClick = [this, &p]() 
         { 
             p.chopFile();
+            currentFile = p.getCurrentFile();
             dnd.repaint();  
         };
 
     addAndMakeVisible(chops);
     addAndMakeVisible(chopChop);
     addAndMakeVisible(history);
-    addAndMakeVisible(playback);
+    addAndMakeVisible(dragToDaw);
+
+    dragToDaw.onDrag = [this](dragToDawButton&, const juce::MouseEvent&)
+        {
+            performExternalDragDropOfFiles(currentFile, true, this);
+        };
 
     addAndMakeVisible(dnd);
 }
@@ -66,7 +71,7 @@ void ChopChopAudioProcessorEditor::resized()
     auto waveformArea = bounds.reduced(bounds.getWidth() * .15, bounds.getHeight() * .2);
     auto leftSide = bounds.removeFromLeft(bounds.getWidth() * .15);
     auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .177);
-    chopsArea.removeFromTop(chopsArea.getHeight() * .2);
+    auto dragArea = chopsArea.removeFromTop(chopsArea.getHeight() * .2);
     chopsArea.removeFromBottom(chopsArea.getHeight() * .25);
 
     auto chopChopArea = bounds.removeFromTop(bounds.getHeight() * .2);
@@ -76,7 +81,12 @@ void ChopChopAudioProcessorEditor::resized()
 
     chops.setBounds(chopsArea);
     chopChop.setBounds(chopChopArea);
-    playback.setBounds(playbackArea);
     history.setBounds(historyArea);
     dnd.setBounds(waveformArea);
+    dragToDaw.setBounds(dragArea);
+}
+
+void ChopChopAudioProcessorEditor::mouseDrag(const juce::MouseEvent&)
+{
+    
 }

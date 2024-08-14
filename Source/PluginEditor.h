@@ -11,11 +11,13 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "GUI/dragAndDrop.h"
+#include "GUI/dragToDawButton.h"
 
 //==============================================================================
 /**
 */
-class ChopChopAudioProcessorEditor  : public juce::AudioProcessorEditor
+class ChopChopAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                      public juce::DragAndDropContainer
 {
 public:
     ChopChopAudioProcessorEditor (ChopChopAudioProcessor&);
@@ -24,19 +26,20 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    void mouseDrag(const juce::MouseEvent&) override;
 
 private:
-    // This reference is provided as a quick way for your editor to
-    // access the processor object that created it.
     ChopChopAudioProcessor& audioProcessor;
 
     dragAndDropComp dnd;
 
-    juce::TextButton chopChop, playback, history;
+    juce::TextButton chopChop, history; //change history to combo box, load like preset manager
+    dragToDawButton dragToDaw;
     juce::Slider chops;
 
-    juce::AudioProcessorValueTreeState::ButtonAttachment chopChopAT, playbackAT, historyAT;
     juce::AudioProcessorValueTreeState::SliderAttachment chopsAT;
+
+    juce::StringArray currentFile;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChopChopAudioProcessorEditor)
 };

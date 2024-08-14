@@ -59,22 +59,30 @@ public:
     void loadFile(const juce::String&);
     juce::AudioBuffer<float>& getWaveform() { return waveform; }
     void chopFile();
-    juce::File getNewFileLocation();
+    juce::StringArray getCurrentFile();
 
 private:
 
-    juce::AudioParameterInt* chops{ nullptr };
+    juce::File getNewFileLocation();
+    juce::String getNewFileName();
+    void writeChoppedFile(juce::String& filename);
+    void readChoppedFile(juce::String& filename);
 
-    juce::AudioParameterBool* history{ nullptr };
-    juce::AudioParameterBool* chopChop{ nullptr };
-    juce::AudioParameterBool* playback{ nullptr };
+    juce::AudioParameterInt* chops{ nullptr };
 
     juce::Synthesiser sampler;
     juce::AudioFormatManager manager;
-    juce::AudioFormatReader* reader{ nullptr };
+    std::unique_ptr<juce::AudioFormatReader> reader{ nullptr };
     juce::AudioBuffer<float> waveform;
     juce::AudioBuffer<float> holder;
     std::vector<juce::AudioBuffer<float>> audioBuffers;
+
+    juce::StringArray currentFile;
+    juce::File orignalFile;
+
+    int calls{ 0 };
+    int filesLoaded{ 0 };
+    int filesChopped{ 0 };
 
 
 
