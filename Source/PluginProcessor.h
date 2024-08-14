@@ -60,10 +60,10 @@ public:
     juce::AudioBuffer<float>& getWaveform() { return waveform; }
     void chopFile();
     juce::StringArray getCurrentFile();
+    juce::File getNewFileLocation();
 
 private:
 
-    juce::File getNewFileLocation();
     juce::String getNewFileName();
     void writeChoppedFile(juce::String& filename);
     void readChoppedFile(juce::String& filename);

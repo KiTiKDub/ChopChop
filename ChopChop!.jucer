@@ -6,12 +6,19 @@
   <MAINGROUP id="RzLWlR" name="ChopChop!">
     <GROUP id="{4D32DFA1-AA03-280A-9330-6D466F714EBB}" name="Source">
       <GROUP id="{FC2AE34E-9EA1-F35F-8D29-EC360E7492EC}" name="GUI">
+        <FILE id="vNjcOX" name="chopChopBrowserComponent.cpp" compile="1" resource="0"
+              file="Source/GUI/chopChopBrowserComponent.cpp"/>
+        <FILE id="MBeNIV" name="chopChopBrowserComponent.h" compile="0" resource="0"
+              file="Source/GUI/chopChopBrowserComponent.h"/>
         <FILE id="N59Os8" name="dragAndDrop.cpp" compile="1" resource="0" file="Source/GUI/dragAndDrop.cpp"/>
         <FILE id="H2pReU" name="dragAndDrop.h" compile="0" resource="0" file="Source/GUI/dragAndDrop.h"/>
         <FILE id="jgkzvb" name="dragToDawButton.cpp" compile="1" resource="0"
               file="Source/GUI/dragToDawButton.cpp"/>
         <FILE id="SUBIxP" name="dragToDawButton.h" compile="0" resource="0"
               file="Source/GUI/dragToDawButton.h"/>
+        <FILE id="hUheR3" name="kLookAndFeel.cpp" compile="1" resource="0"
+              file="Source/GUI/kLookAndFeel.cpp"/>
+        <FILE id="fuJNzO" name="kLookAndFeel.h" compile="0" resource="0" file="Source/GUI/kLookAndFeel.h"/>
       </GROUP>
       <FILE id="q8bqyU" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
