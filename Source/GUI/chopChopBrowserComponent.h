@@ -15,12 +15,12 @@ struct ChopChopBrowserComp : public juce::FileBrowserComponent
 {
     using juce::FileBrowserComponent::FileBrowserComponent;
 
-    void fileDoubleClicked(const juce::File& file) override
+    void fileClicked(const juce::File& file, const juce::MouseEvent& e) override
     {
         clickedFile = file;
-        reload = true;
+        fileReloaded = true;
     }
 
-    juce::File clickedFile;
-    bool reload;
+    juce::File clickedFile{ juce::File() };
+    bool fileReloaded{ false };
 };

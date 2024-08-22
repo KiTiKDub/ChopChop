@@ -29,6 +29,7 @@ struct Laf : juce::LookAndFeel_V4 {
         const juce::String& text, const juce::String& shortcutKeyText,
         const juce::Drawable* icon, const juce::Colour* textColour) override;
     void paintToolbarBackground(juce::Graphics& g, int w, int h, juce::Toolbar& toolbar) override;
+    void drawButtonBackground(juce::Graphics& g, juce::Button&, const juce::Colour&, bool, bool) override;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Laf)

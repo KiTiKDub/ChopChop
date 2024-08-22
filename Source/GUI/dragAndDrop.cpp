@@ -25,6 +25,7 @@ void dragAndDropComp::paint(juce::Graphics& g)
     g.fillAll(juce::Colours::black);
 
     g.setColour(juce::Colours::white);
+    g.drawRect(getLocalBounds());
 
     juce::Path p;
     audioPoints.clear();

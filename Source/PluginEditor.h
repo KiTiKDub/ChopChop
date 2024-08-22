@@ -19,7 +19,8 @@
 /**
 */
 class ChopChopAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                      public juce::DragAndDropContainer
+                                      public juce::DragAndDropContainer,
+                                      public juce::Timer
 {
 public:
     ChopChopAudioProcessorEditor (ChopChopAudioProcessor&);
@@ -28,6 +29,7 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+    void timerCallback() override;
 
 private:
     ChopChopAudioProcessor& audioProcessor;
@@ -36,7 +38,7 @@ private:
 
     dragAndDropComp dnd;
 
-    juce::TextButton chopChop, history, load, back; //change history to combo box, load like preset manager
+    juce::TextButton chopChop, history, back;
     dragToDawButton dragToDaw;
     juce::Slider chops;
 

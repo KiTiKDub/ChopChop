@@ -14,16 +14,15 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
     : AudioProcessorEditor (&p), audioProcessor (p), chopsAT(p.apvts, "chops", chops),
       dnd(p)
 {
-    setSize (500, 250);
+    setSize (700, 400);
     setLookAndFeel(&lnf);
 
-    chops.setSliderStyle(juce::Slider::SliderStyle::LinearVertical);
+    chops.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
     chops.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 100, 20);
 
     chopChop.setButtonText("Chop Chop!");
     history.setButtonText("History");
     dragToDaw.setButtonText("Drag to DAW");
-    load.setButtonText("Load");
     back.setButtonText("Back");
 
     chopChop.onClick = [this, &p]() 
@@ -38,7 +37,6 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
     addAndMakeVisible(history);
     addAndMakeVisible(dragToDaw);
     addChildComponent(createdFiles);
-    addChildComponent(load);
     addChildComponent(back);
 
     dragToDaw.onDrag = [this](dragToDawButton&, const juce::MouseEvent&)
@@ -56,25 +54,8 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
 
             createdFiles.setRoot(p.getNewFileLocation());
             createdFiles.setVisible(true);
-            load.setVisible(true);
             back.setVisible(true);
             
-        };
-
-    load.onClick = [this, &p]()
-        {
-            p.loadFile(createdFiles.clickedFile.getFullPathName());
-            createdFiles.reload = false;
-
-            chops.setVisible(true);
-            chopChop.setVisible(true);
-            dragToDaw.setVisible(true);
-            dnd.setVisible(true);
-            history.setVisible(true);
-
-            createdFiles.setVisible(false);
-            load.setVisible(false);
-            back.setVisible(false);
         };
 
     back.onClick = [this, &p]()
@@ -86,11 +67,11 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
             history.setVisible(true);
 
             createdFiles.setVisible(false);
-            load.setVisible(false);
             back.setVisible(false);
         };
 
     addAndMakeVisible(dnd);
+    startTimerHz(10);
 }
 
 ChopChopAudioProcessorEditor::~ChopChopAudioProcessorEditor()
@@ -102,7 +83,7 @@ ChopChopAudioProcessorEditor::~ChopChopAudioProcessorEditor()
 void ChopChopAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
+    g.fillAll (juce::Colours::black);
     auto bounds = getLocalBounds();
 
     auto waveformArea = bounds.reduced(bounds.getWidth() * .15, bounds.getHeight() * .2);
@@ -110,7 +91,7 @@ void ChopChopAudioProcessorEditor::paint (juce::Graphics& g)
     auto rightSide = bounds.removeFromRight(bounds.getWidth() * .177);
     auto top = bounds.removeFromTop(bounds.getHeight() * .2);
     g.setColour (juce::Colours::white);
-    g.drawRect(waveformArea);
+    //g.drawRect(waveformArea);
     //g.drawRect(top);
     
 }
@@ -118,29 +99,42 @@ void ChopChopAudioProcessorEditor::paint (juce::Graphics& g)
 void ChopChopAudioProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
-    auto secondBounds = bounds;
+    auto createdFilesArea = bounds;
+    createdFilesArea.removeFromTop(createdFilesArea.getHeight() * .2);
+    createdFiles.setBounds(createdFilesArea);
 
-    auto waveformArea = bounds.reduced(bounds.getWidth() * .15, bounds.getHeight() * .2);
-    auto leftSide = bounds.removeFromLeft(bounds.getWidth() * .15);
-    auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .177);
-    auto dragArea = chopsArea.removeFromTop(chopsArea.getHeight() * .2);
-    chopsArea.removeFromBottom(chopsArea.getHeight() * .25);
+    auto waveformArea = bounds.removeFromBottom(bounds.getHeight() * .8);
+    auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .2);
+    auto otherButtons = bounds.removeFromLeft(bounds.getWidth() * .25);
+    back.setBounds(otherButtons);
 
-    auto chopChopArea = bounds.removeFromTop(bounds.getHeight() * .2);
-    auto playbackArea = bounds.removeFromBottom(bounds.getHeight() * .25);
-
-    auto historyArea = leftSide.removeFromTop(leftSide.getHeight() * .2);
+    auto dragArea = otherButtons.removeFromTop(otherButtons.getHeight() * .5);
+    dragArea.reduce(2, 2);
+    otherButtons.reduce(2, 2);
+    bounds.reduce(2, 2);
 
     chops.setBounds(chopsArea);
-    chopChop.setBounds(chopChopArea);
-    history.setBounds(historyArea);
+    chopChop.setBounds(bounds);
+    history.setBounds(otherButtons);
     dnd.setBounds(waveformArea);
     dragToDaw.setBounds(dragArea);
 
+}
 
-    auto buttonArea = secondBounds.removeFromLeft(leftSide.getWidth());
-    auto topButton = buttonArea.removeFromTop(buttonArea.getHeight() * .5);
-    load.setBounds(buttonArea);
-    back.setBounds(topButton);
-    createdFiles.setBounds(secondBounds);
+void ChopChopAudioProcessorEditor::timerCallback()
+{
+    if (createdFiles.fileReloaded)
+    {
+        createdFiles.fileReloaded = false;
+        audioProcessor.loadFile(createdFiles.clickedFile.getFullPathName());
+
+        chops.setVisible(true);
+        chopChop.setVisible(true);
+        dragToDaw.setVisible(true);
+        dnd.setVisible(true);
+        history.setVisible(true);
+
+        createdFiles.setVisible(false);
+        back.setVisible(false);
+    }
 }

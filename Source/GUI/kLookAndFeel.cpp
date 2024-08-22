@@ -359,3 +359,50 @@ void Laf::paintToolbarBackground(juce::Graphics& g, int w, int h, juce::Toolbar&
     g.setColour(juce::Colours::black);
     g.fillAll();
 }
+
+void Laf::drawButtonBackground(juce::Graphics& g, juce::Button& button, const juce::Colour& backgroundColour, bool shouldDrawButtonAsDown, bool shouldDrawButtonAsHighlighted)
+{
+    using namespace juce;
+
+    auto cornerSize = 6.0f;
+    auto bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
+
+    /*auto baseColour = backgroundColour.withMultipliedSaturation(button.hasKeyboardFocus(true) ? 1.3f : 0.9f)
+        .withMultipliedAlpha(button.isEnabled() ? 1.0f : 0.5f);*/
+
+    auto baseColour = /*Colour(64u, 194u, 230u)*/ Colour(186u, 34u, 34u);
+
+    if (shouldDrawButtonAsDown || shouldDrawButtonAsHighlighted)
+        baseColour = baseColour.contrasting(shouldDrawButtonAsDown ? 0.2f : 0.05f);
+
+    g.setColour(baseColour);
+
+    auto flatOnLeft = button.isConnectedOnLeft();
+    auto flatOnRight = button.isConnectedOnRight();
+    auto flatOnTop = button.isConnectedOnTop();
+    auto flatOnBottom = button.isConnectedOnBottom();
+
+    if (flatOnLeft || flatOnRight || flatOnTop || flatOnBottom)
+    {
+        Path path;
+        path.addRoundedRectangle(bounds.getX(), bounds.getY(),
+            bounds.getWidth(), bounds.getHeight(),
+            cornerSize, cornerSize,
+            !(flatOnLeft || flatOnTop),
+            !(flatOnRight || flatOnTop),
+            !(flatOnLeft || flatOnBottom),
+            !(flatOnRight || flatOnBottom));
+
+        g.fillPath(path);
+
+        g.setColour(button.findColour(ComboBox::outlineColourId));
+        g.strokePath(path, PathStrokeType(1.0f));
+    }
+    else
+    {
+        g.fillRect(bounds);
+
+        g.setColour(Colour(64u, 194u, 230u));
+        g.drawRect(bounds, 2.0f);
+    }
+}
