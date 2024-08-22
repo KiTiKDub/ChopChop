@@ -182,7 +182,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ChopChopAudioProcessor::crea
     using namespace juce;
     AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<AudioParameterInt>("chops", "Chops", 1, 100, 5));
+    layout.add(std::make_unique<AudioParameterInt>("chops", "Chops", 2, 100, 5));
 
     return layout;
 }
@@ -207,6 +207,9 @@ void ChopChopAudioProcessor::loadFile(const juce::String& path)
 
 void ChopChopAudioProcessor::chopFile()
 {
+    if (reader == nullptr)
+        return;
+
     int length = static_cast<int>(reader->lengthInSamples);
     int i = 0;
 

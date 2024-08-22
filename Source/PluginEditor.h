@@ -14,6 +14,7 @@
 #include "GUI/dragToDawButton.h"
 #include "GUI/kLookAndFeel.h"
 #include "GUI/chopChopBrowserComponent.h"
+#include "GUI/rotarySliderWithLabels.h"
 
 //==============================================================================
 /**
@@ -32,6 +33,9 @@ public:
     void timerCallback() override;
 
 private:
+
+    void updateRSWL();
+
     ChopChopAudioProcessor& audioProcessor;
 
     Laf lnf;
@@ -40,9 +44,9 @@ private:
 
     juce::TextButton chopChop, history, back;
     dragToDawButton dragToDaw;
-    juce::Slider chops;
+    std::unique_ptr<RotarySliderWithLabels> chops;
 
-    juce::AudioProcessorValueTreeState::SliderAttachment chopsAT;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chopsAT;
 
     juce::StringArray currentFile;
     ChopChopBrowserComp createdFiles { juce::FileBrowserComponent::FileChooserFlags::openMode | juce::FileBrowserComponent::FileChooserFlags::canSelectFiles, juce::File(), nullptr, nullptr };

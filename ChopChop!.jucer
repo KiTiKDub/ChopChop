@@ -17,9 +17,9 @@
         <FILE id="hUheR3" name="kLookAndFeel.cpp" compile="1" resource="0"
               file="Source/GUI/kLookAndFeel.cpp"/>
         <FILE id="fuJNzO" name="kLookAndFeel.h" compile="0" resource="0" file="Source/GUI/kLookAndFeel.h"/>
-        <FILE id="kRtu7P" name="rotarySliderWithLabels.cpp" compile="1" resource="0"
+        <FILE id="oCUIAH" name="rotarySliderWithLabels.cpp" compile="1" resource="0"
               file="Source/GUI/rotarySliderWithLabels.cpp"/>
-        <FILE id="ckZ5C6" name="rotarySliderWithLabels.h" compile="0" resource="0"
+        <FILE id="tYEerB" name="rotarySliderWithLabels.h" compile="0" resource="0"
               file="Source/GUI/rotarySliderWithLabels.h"/>
       </GROUP>
       <FILE id="q8bqyU" name="PluginProcessor.cpp" compile="1" resource="0"

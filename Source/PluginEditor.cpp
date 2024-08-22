@@ -11,14 +11,15 @@
 
 //==============================================================================
 ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), chopsAT(p.apvts, "chops", chops),
-      dnd(p)
+    : AudioProcessorEditor (&p), audioProcessor (p), dnd(p)
 {
+    updateRSWL();
     setSize (700, 400);
     setLookAndFeel(&lnf);
 
-    chops.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-    chops.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 100, 20);
+
+    //chops.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
+    //chops.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 100, 20);
 
     chopChop.setButtonText("Chop Chop!");
     history.setButtonText("History");
@@ -32,7 +33,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
             dnd.repaint();  
         };
 
-    addAndMakeVisible(chops);
+    addAndMakeVisible(*chops);
     addAndMakeVisible(chopChop);
     addAndMakeVisible(history);
     addAndMakeVisible(dragToDaw);
@@ -46,7 +47,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
 
     history.onClick = [this, &p]()
         {
-            chops.setVisible(false);
+            chops->setVisible(false);
             chopChop.setVisible(false);
             dragToDaw.setVisible(false);
             dnd.setVisible(false);
@@ -60,7 +61,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
 
     back.onClick = [this, &p]()
         {
-            chops.setVisible(true);
+            chops->setVisible(true);
             chopChop.setVisible(true);
             dragToDaw.setVisible(true);
             dnd.setVisible(true);
@@ -90,9 +91,12 @@ void ChopChopAudioProcessorEditor::paint (juce::Graphics& g)
     auto leftSide = bounds.removeFromLeft(bounds.getWidth() * .15);
     auto rightSide = bounds.removeFromRight(bounds.getWidth() * .177);
     auto top = bounds.removeFromTop(bounds.getHeight() * .2);
+    top.removeFromLeft(top.getWidth() * .2);
     g.setColour (juce::Colours::white);
-    //g.drawRect(waveformArea);
-    //g.drawRect(top);
+
+    if (createdFiles.isVisible())
+        g.drawFittedText("Closing the plugin window will perserve history, but removing the plugin will delete all history. So draw to the daw what you like!"
+            , top, juce::Justification::centred, 2);
     
 }
 
@@ -104,7 +108,7 @@ void ChopChopAudioProcessorEditor::resized()
     createdFiles.setBounds(createdFilesArea);
 
     auto waveformArea = bounds.removeFromBottom(bounds.getHeight() * .8);
-    auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .2);
+    auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .15);
     auto otherButtons = bounds.removeFromLeft(bounds.getWidth() * .25);
     back.setBounds(otherButtons);
 
@@ -113,7 +117,7 @@ void ChopChopAudioProcessorEditor::resized()
     otherButtons.reduce(2, 2);
     bounds.reduce(2, 2);
 
-    chops.setBounds(chopsArea);
+    chops->setBounds(chopsArea);
     chopChop.setBounds(bounds);
     history.setBounds(otherButtons);
     dnd.setBounds(waveformArea);
@@ -128,7 +132,7 @@ void ChopChopAudioProcessorEditor::timerCallback()
         createdFiles.fileReloaded = false;
         audioProcessor.loadFile(createdFiles.clickedFile.getFullPathName());
 
-        chops.setVisible(true);
+        chops->setVisible(true);
         chopChop.setVisible(true);
         dragToDaw.setVisible(true);
         dnd.setVisible(true);
@@ -137,4 +141,20 @@ void ChopChopAudioProcessorEditor::timerCallback()
         createdFiles.setVisible(false);
         back.setVisible(false);
     }
+}
+
+void ChopChopAudioProcessorEditor::updateRSWL()
+{
+    auto& chopsParam = getParam(audioProcessor.apvts, "chops");
+
+    chops = std::make_unique<RotarySliderWithLabels>(&chopsParam, "Sections", "chops");
+
+    makeAttachment(chopsAT, audioProcessor.apvts, "chops", *chops);
+
+    addLabelPairs(chops->labels, 1, 3, chopsParam, "" );
+
+    chops.get()->onValueChange = [this, &chopsParam]()
+        {
+            addLabelPairs(chops->labels, 1, 3, chopsParam, "" );
+        };
 }
