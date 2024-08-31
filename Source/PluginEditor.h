@@ -40,6 +40,9 @@ private:
 
     Laf lnf;
 
+    juce::URL url{ "https://kwhaley5.gumroad.com/" };
+    juce::HyperlinkButton gumroad{ "Gumroad", url };
+
     dragAndDropComp dnd;
 
     juce::TextButton chopChop, history, back;

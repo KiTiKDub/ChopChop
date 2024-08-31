@@ -4,6 +4,11 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
               companyName="KiTiK Music">
   <MAINGROUP id="RzLWlR" name="ChopChop!">
+    <GROUP id="{AB8C3459-4F52-C829-44ED-E20207FD315B}" name="Assets">
+      <FILE id="uq2orq" name="KITIK_LOGO_NO_BKGD.png" compile="0" resource="1"
+            file="Assets/KITIK_LOGO_NO_BKGD.png"/>
+      <FILE id="p80lBO" name="offshore.ttf" compile="0" resource="1" file="Assets/offshore.ttf"/>
+    </GROUP>
     <GROUP id="{4D32DFA1-AA03-280A-9330-6D466F714EBB}" name="Source">
       <GROUP id="{FC2AE34E-9EA1-F35F-8D29-EC360E7492EC}" name="GUI">
         <FILE id="MBeNIV" name="chopChopBrowserComponent.h" compile="0" resource="0"

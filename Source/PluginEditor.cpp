@@ -17,10 +17,6 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
     setSize (700, 400);
     setLookAndFeel(&lnf);
 
-
-    //chops.setSliderStyle(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag);
-    //chops.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 100, 20);
-
     chopChop.setButtonText("Chop Chop!");
     history.setButtonText("History");
     dragToDaw.setButtonText("Drag to DAW");
@@ -72,6 +68,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
         };
 
     addAndMakeVisible(dnd);
+    addAndMakeVisible(gumroad);
     startTimerHz(10);
 }
 
@@ -83,16 +80,22 @@ ChopChopAudioProcessorEditor::~ChopChopAudioProcessorEditor()
 //==============================================================================
 void ChopChopAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (juce::Colours::black);
     auto bounds = getLocalBounds();
 
     auto waveformArea = bounds.reduced(bounds.getWidth() * .15, bounds.getHeight() * .2);
     auto leftSide = bounds.removeFromLeft(bounds.getWidth() * .15);
     auto rightSide = bounds.removeFromRight(bounds.getWidth() * .177);
+    rightSide.removeFromBottom(rightSide.getHeight() * .8);
+    auto logoArea = rightSide;
+    logoArea.removeFromLeft(logoArea.getWidth() * .35);
+    logoArea.removeFromBottom(logoArea.getHeight() * .1);
     auto top = bounds.removeFromTop(bounds.getHeight() * .2);
     top.removeFromLeft(top.getWidth() * .2);
-    g.setColour (juce::Colours::white);
+    g.setColour(juce::Colours::white);
+
+    auto logo = juce::ImageCache::getFromMemory(BinaryData::KITIK_LOGO_NO_BKGD_png, BinaryData::KITIK_LOGO_NO_BKGD_pngSize);
+    g.drawImage(logo, logoArea.toFloat(), juce::RectanglePlacement::centred);
 
     if (createdFiles.isVisible())
         g.drawFittedText("Closing the plugin window will perserve history, but removing the plugin will delete all history. So draw to the daw what you like!"
@@ -108,6 +111,8 @@ void ChopChopAudioProcessorEditor::resized()
     createdFiles.setBounds(createdFilesArea);
 
     auto waveformArea = bounds.removeFromBottom(bounds.getHeight() * .8);
+    auto logoArea = bounds.removeFromRight(bounds.getWidth() * .1);
+    logoArea.removeFromTop(logoArea.getHeight() * .67);
     auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .15);
     auto otherButtons = bounds.removeFromLeft(bounds.getWidth() * .25);
     back.setBounds(otherButtons);
@@ -122,6 +127,12 @@ void ChopChopAudioProcessorEditor::resized()
     history.setBounds(otherButtons);
     dnd.setBounds(waveformArea);
     dragToDaw.setBounds(dragArea);
+
+    auto font = juce::Font();
+
+    gumroad.setFont(juce::Font(), false, juce::Justification::centred);
+    gumroad.setColour(0x1001f00, juce::Colours::white);
+    gumroad.setBounds(logoArea);
 
 }
 
