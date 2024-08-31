@@ -64,6 +64,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
             history.setVisible(true);
 
             createdFiles.setVisible(false);
+            createdFiles.setRoot(juce::File());
             back.setVisible(false);
         };
 
