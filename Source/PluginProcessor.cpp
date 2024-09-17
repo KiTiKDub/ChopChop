@@ -209,6 +209,9 @@ void ChopChopAudioProcessor::chopFile()
 {
     if (reader == nullptr)
         return;
+    
+    int fadeLength = 10;
+    float increment = 1 / (float)fadeLength;
 
     int length = static_cast<int>(reader->lengthInSamples);
     int i = 0;
@@ -233,7 +236,7 @@ void ChopChopAudioProcessor::chopFile()
             i = 0;
         }
     }
-
+    
     //Shuffle
     auto rd = std::random_device{};
     auto rng = std::default_random_engine{ rd() };
@@ -244,8 +247,16 @@ void ChopChopAudioProcessor::chopFile()
     //piece back together
     for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
     {
-        auto read = audioBuffers[buffer].getReadPointer(0);
+        auto read = audioBuffers[buffer].getWritePointer(0);
         auto length = audioBuffers[buffer].getNumSamples();
+
+        //Add Fade ins and outs
+        for (int i = 0; i < fadeLength; i++)
+        {
+            read[i] = read[i] * i * increment;
+            read[length - i - 1] = read[length - i - 1] * i * increment;
+        }
+
         waveform.addFrom(0, length * buffer, audioBuffers[buffer], 0, 0, length);
     }
 
