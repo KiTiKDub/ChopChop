@@ -142,6 +142,7 @@ void ChopChopAudioProcessorEditor::timerCallback()
     if (createdFiles.fileReloaded)
     {
         createdFiles.fileReloaded = false;
+        currentFile = createdFiles.clickedFile.getFullPathName();
         audioProcessor.loadFile(createdFiles.clickedFile.getFullPathName());
 
         chops->setVisible(true);
