@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="nQXO9O" name="ChopChop!" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn"
-              companyName="KiTiK Music">
+              companyName="KiTiK Music" version="1.0.1">
   <MAINGROUP id="RzLWlR" name="ChopChop!">
     <GROUP id="{AB8C3459-4F52-C829-44ED-E20207FD315B}" name="Assets">
       <FILE id="uq2orq" name="KITIK_LOGO_NO_BKGD.png" compile="0" resource="1"
