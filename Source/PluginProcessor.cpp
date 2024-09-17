@@ -182,7 +182,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ChopChopAudioProcessor::crea
     using namespace juce;
     AudioProcessorValueTreeState::ParameterLayout layout;
 
-    layout.add(std::make_unique<AudioParameterInt>("chops", "Chops", 2, 100, 5));
+    layout.add(std::make_unique<AudioParameterInt>(ParameterID{"chops",1}, "Chops", 2, 100, 5));
 
     return layout;
 }
