@@ -273,12 +273,12 @@ juce::StringArray ChopChopAudioProcessor::getCurrentFile()
 juce::File ChopChopAudioProcessor::getNewFileLocation()
 {
     #if JUCE_WINDOWS
-    auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("Application Support").getChildFile(ProjectInfo::companyName);
+    auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("Application Support").getChildFile("KiTiK Music");
     #elif JUCE_MAC
-    auto kitikFolder  = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(ProjectInfo::companyName);
+    auto kitikFolder  = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("KiTiK Music");
     #endif
 
-    auto pluginFolder = kitikFolder.getChildFile(ProjectInfo::projectName);
+    auto pluginFolder = kitikFolder.getChildFile("ChopChop");
     auto generatedSamples = pluginFolder.getChildFile("GeneratedSamples");
 
     if (!generatedSamples.exists())

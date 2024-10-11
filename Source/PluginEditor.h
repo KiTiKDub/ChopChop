@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include "BinaryData.h"
+#include "juce_core/juce_core.h"
 #include "PluginProcessor.h"
 #include "GUI/dragAndDrop.h"
 #include "GUI/dragToDawButton.h"
