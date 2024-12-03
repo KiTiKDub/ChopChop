@@ -25,6 +25,26 @@ struct dragAndDropComp : public juce::Component, public juce::FileDragAndDropTar
 
 private:
 
+    std::unique_ptr<juce::FileChooser> chooser;
+
+    void mouseDoubleClick(const juce::MouseEvent &event) override
+    {
+      chooser = std::make_unique<juce::FileChooser>("Select a sample", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", "*.mp3", "*.aiff");
+
+      auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;
+
+      chooser->launchAsync(folderChooserFlags, [this](const juce::FileChooser &myChooser)
+      {
+        juce::File audioFile (myChooser.getResult());
+        if(audioFile.exists())
+        {
+          audioProcessor.loadFile(audioFile.getFullPathName());
+          repaint();
+        }
+      });
+      
+    }
+
     ChopChopAudioProcessor& audioProcessor;
     std::vector<float> audioPoints;
 };
