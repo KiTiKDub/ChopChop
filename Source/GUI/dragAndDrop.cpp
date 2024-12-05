@@ -24,7 +24,7 @@ void dragAndDropComp::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
 
-    g.setColour(juce::Colours::white);
+    g.setColour(juce::Colours::whitesmoke);
     g.drawRect(getLocalBounds());
 
     juce::Path p;
@@ -51,6 +51,7 @@ void dragAndDropComp::paint(juce::Graphics& g)
 
         g.strokePath(p, juce::PathStrokeType(1));
     }
+
 }
 
 void dragAndDropComp::resized()

@@ -16,6 +16,7 @@
 #include "GUI/kLookAndFeel.h"
 #include "GUI/chopChopBrowserComponent.h"
 #include "GUI/rotarySliderWithLabels.h"
+#include "GUI/chopOverlayComp.h"
 
 //==============================================================================
 /**
@@ -48,12 +49,13 @@ private:
 
     juce::TextButton chopChop, history, back;
     dragToDawButton dragToDaw;
-    std::unique_ptr<RotarySliderWithLabels> chops;
+    std::unique_ptr<RotarySliderWithLabels> chops, skew;
 
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chopsAT;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> chopsAT, skewAT;
 
     juce::StringArray currentFile;
     ChopChopBrowserComp createdFiles { juce::FileBrowserComponent::FileChooserFlags::openMode | juce::FileBrowserComponent::FileChooserFlags::canSelectFiles, juce::File(), nullptr, nullptr };
+    ChopOverlayComp overlay;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ChopChopAudioProcessorEditor)
 };

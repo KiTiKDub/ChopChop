@@ -11,7 +11,7 @@ endif()
 
 
 # Change to your project name
-project(ChopChop VERSION 1.0.2)
+project(ChopChop VERSION 1.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_XCODE_GENERATE_SCHEME OFF)
@@ -42,6 +42,8 @@ set(SourceFiles
         Source/GUI/dragToDawButton.cpp
         Source/GUI/rotarySliderWithLabels.cpp
         Source/GUI/rotarySliderWithLabels.h
+        Source/GUI/chopOverlayComp.h
+        Source/GUI/chopOverlayComp.cpp
 )
 
 # Change these to your own preferences

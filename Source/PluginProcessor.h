@@ -62,6 +62,9 @@ public:
     void chopFile();
     juce::StringArray getCurrentFile();
     juce::File getNewFileLocation();
+    std::vector<float> getChopSpaces();
+
+    std::vector<float> chopSpaces;
 
 private:
 
@@ -70,7 +73,8 @@ private:
     void readChoppedFile(juce::String& filename);
 
     juce::AudioParameterInt* chops{ nullptr };
-
+    juce::AudioParameterFloat* skew{ nullptr };
+ 
     juce::Synthesiser sampler;
     juce::AudioFormatManager manager;
     std::unique_ptr<juce::AudioFormatReader> reader{ nullptr };

@@ -11,7 +11,7 @@
 
 //==============================================================================
 ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p), dnd(p)
+    : AudioProcessorEditor (&p), audioProcessor (p), dnd(p), overlay(p)
 {
     updateRSWL();
     setSize (700, 400);
@@ -29,10 +29,15 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
             dnd.repaint();  
         };
 
+    chops->setName("Chops");
+    skew->setName("Skew");
+
     addAndMakeVisible(*chops);
+    addAndMakeVisible(*skew);
     addAndMakeVisible(chopChop);
     addAndMakeVisible(history);
     addAndMakeVisible(dragToDaw);
+    addChildComponent(overlay,2);
     addChildComponent(createdFiles);
     addChildComponent(back);
 
@@ -44,6 +49,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
     history.onClick = [this, &p]()
         {
             chops->setVisible(false);
+            skew->setVisible(false);
             chopChop.setVisible(false);
             dragToDaw.setVisible(false);
             dnd.setVisible(false);
@@ -58,6 +64,7 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
     back.onClick = [this, &p]()
         {
             chops->setVisible(true);
+            skew->setVisible(true);
             chopChop.setVisible(true);
             dragToDaw.setVisible(true);
             dnd.setVisible(true);
@@ -68,7 +75,19 @@ ChopChopAudioProcessorEditor::ChopChopAudioProcessorEditor (ChopChopAudioProcess
             back.setVisible(false);
         };
 
-    addAndMakeVisible(dnd);
+    skew->onDragStart = [this]()
+    {
+        overlay.setVisible(true);
+        dnd.setAlpha(.5f);
+    };
+
+    skew->onDragEnd = [this]()
+    {
+        overlay.setVisible(false);
+        dnd.setAlpha(1.f);
+    };
+
+    addAndMakeVisible(dnd,0);
     addAndMakeVisible(gumroad);
     startTimerHz(10);
 }
@@ -117,6 +136,7 @@ void ChopChopAudioProcessorEditor::resized()
     auto chopsArea = bounds.removeFromRight(bounds.getWidth() * .15);
     auto otherButtons = bounds.removeFromLeft(bounds.getWidth() * .25);
     back.setBounds(otherButtons);
+    auto skewArea = bounds.removeFromRight(bounds.getWidth() * .2);
 
     auto dragArea = otherButtons.removeFromTop(otherButtons.getHeight() * .5);
     dragArea.reduce(2, 2);
@@ -124,9 +144,11 @@ void ChopChopAudioProcessorEditor::resized()
     bounds.reduce(2, 2);
 
     chops->setBounds(chopsArea);
+    skew->setBounds(skewArea);
     chopChop.setBounds(bounds);
     history.setBounds(otherButtons);
     dnd.setBounds(waveformArea);
+    overlay.setBounds(waveformArea);
     dragToDaw.setBounds(dragArea);
 
     auto font = juce::Font();
@@ -146,6 +168,7 @@ void ChopChopAudioProcessorEditor::timerCallback()
         audioProcessor.loadFile(createdFiles.clickedFile.getFullPathName());
 
         chops->setVisible(true);
+        skew->setVisible(true);
         chopChop.setVisible(true);
         dragToDaw.setVisible(true);
         dnd.setVisible(true);
@@ -153,21 +176,36 @@ void ChopChopAudioProcessorEditor::timerCallback()
 
         createdFiles.setVisible(false);
         back.setVisible(false);
+        repaint();
     }
+
+    if(overlay.isVisible())
+    {
+        overlay.repaint();
+    }
+
 }
 
 void ChopChopAudioProcessorEditor::updateRSWL()
 {
     auto& chopsParam = getParam(audioProcessor.apvts, "chops");
+    auto& skewParam = getParam(audioProcessor.apvts, "skew");
 
     chops = std::make_unique<RotarySliderWithLabels>(&chopsParam, "Sections", "chops");
+    skew = std::make_unique<RotarySliderWithLabels>(&skewParam, "", "Skew");
 
     makeAttachment(chopsAT, audioProcessor.apvts, "chops", *chops);
+    makeAttachment(skewAT, audioProcessor.apvts, "skew", *skew);
 
     addLabelPairs(chops->labels, 1, 3, chopsParam, "" );
+    addLabelPairs(skew->labels, 1, 3, skewParam, "");
 
     chops.get()->onValueChange = [this, &chopsParam]()
         {
             addLabelPairs(chops->labels, 1, 3, chopsParam, "" );
         };
+    skew.get()->onValueChange = [this, &skewParam]()
+    {
+        addLabelPairs(skew->labels, 1, 3, skewParam, "");
+    };
 }

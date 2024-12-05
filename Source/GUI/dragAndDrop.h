@@ -29,6 +29,8 @@ private:
 
     void mouseDoubleClick(const juce::MouseEvent &event) override
     {
+      juce::ignoreUnused();
+      
       chooser = std::make_unique<juce::FileChooser>("Select a sample", juce::File::getSpecialLocation(juce::File::userDesktopDirectory), "*.wav", "*.mp3", "*.aiff");
 
       auto folderChooserFlags = juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles;

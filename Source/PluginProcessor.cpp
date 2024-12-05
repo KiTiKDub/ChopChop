@@ -25,6 +25,7 @@ ChopChopAudioProcessor::ChopChopAudioProcessor()
 {
 
     chops = dynamic_cast<juce::AudioParameterInt*>(apvts.getParameter("chops"));
+    skew = dynamic_cast<juce::AudioParameterFloat*>(apvts.getParameter("skew"));
 
     sampler.addVoice(new juce::SamplerVoice());
     manager.registerBasicFormats();
@@ -181,8 +182,10 @@ juce::AudioProcessorValueTreeState::ParameterLayout ChopChopAudioProcessor::crea
 {
     using namespace juce;
     AudioProcessorValueTreeState::ParameterLayout layout;
+    auto skewRange = juce::NormalisableRange<float>(0, 10, .01);
 
     layout.add(std::make_unique<AudioParameterInt>(ParameterID{"chops",1}, "Chops", 2, 100, 5));
+    layout.add(std::make_unique<AudioParameterFloat>(ParameterID{"skew",1}, "Skew", skewRange, 0));
 
     return layout;
 }
@@ -193,6 +196,7 @@ void ChopChopAudioProcessor::loadFile(const juce::String& path)
 
     orignalFile = juce::File(path);
     reader.reset(manager.createReaderFor(orignalFile));
+    reader->sampleRate = getSampleRate();
     filesLoaded++;
 
     int length = static_cast<int>(reader->lengthInSamples);
@@ -209,18 +213,22 @@ void ChopChopAudioProcessor::chopFile()
 {
     if (reader == nullptr)
         return;
-    
+  
     int fadeLength = 10;
     float increment = 1 / (float)fadeLength;
 
     int length = static_cast<int>(reader->lengthInSamples);
     int i = 0;
+    int j = 0;
 
     auto waveformReader = waveform.getReadPointer(0);
-    int seperate = length / chops->get();
+    auto chopSizes = getChopSpaces();
+    //int seperate = length / chops->get(); //need to update this based on skew
+
+    auto ratio = length/getSampleRate();
 
     holder.clear();
-    holder.setSize(1, seperate);
+    holder.setSize(1, chopSizes[j] * ratio);
     audioBuffers.clear();
 
     //Break sample into sections
@@ -229,11 +237,18 @@ void ChopChopAudioProcessor::chopFile()
         holder.addSample(0, i, waveformReader[s]);
         i++;
 
-        if (i == seperate)
+        auto maxSize = std::floor(chopSizes[j]*ratio);
+        if (i == maxSize) //need to floor and all that good stuff
         {
             audioBuffers.push_back(holder);
-            holder.clear();
-            i = 0;
+            if(audioBuffers.size() != chopSizes.size())
+            {
+                holder.clear();
+                j++;
+                holder.setSize(1, chopSizes[j]*ratio);
+                i = 0;
+            }
+            else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
         }
     }
     
@@ -243,21 +258,23 @@ void ChopChopAudioProcessor::chopFile()
     std::shuffle(audioBuffers.begin(), audioBuffers.end(), rng);
 
     waveform.clear();
+    int totalLength = 0;
 
     //piece back together
     for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
     {
         auto read = audioBuffers[buffer].getWritePointer(0);
-        auto length = audioBuffers[buffer].getNumSamples();
+        auto bufferLength = audioBuffers[buffer].getNumSamples();
 
         //Add Fade ins and outs
         for (int i = 0; i < fadeLength; i++)
         {
             read[i] = read[i] * i * increment;
-            read[length - i - 1] = read[length - i - 1] * i * increment;
+            read[bufferLength - i - 1] = read[bufferLength - i - 1] * i * increment;
         }
 
-        waveform.addFrom(0, length * buffer, audioBuffers[buffer], 0, 0, length);
+        waveform.addFrom(0, totalLength, audioBuffers[buffer], 0, 0, bufferLength); // length*buffer only works if linear, need alt way to do this.
+        totalLength += bufferLength;
     }
 
     auto fileName = getNewFileName();
@@ -285,6 +302,36 @@ juce::File ChopChopAudioProcessor::getNewFileLocation()
         generatedSamples.createDirectory();
 
     return generatedSamples;
+}
+
+std::vector<float> ChopChopAudioProcessor::getChopSpaces()
+{
+    std::vector<float> chopSizes;
+
+    auto skewValue = skew->get();
+    auto chopsAmount = chops->get();
+    auto sampleRate = getSampleRate();
+    auto normalizeSkew = skewValue / 5;
+    float sampleRateHolder = 0;
+
+    for (int i = 1; i < chopsAmount + 1; i++)
+    {
+        float currentDistance = (float)i / chopsAmount * sampleRate;
+
+        auto top = std::pow(currentDistance, normalizeSkew) * std::log10(currentDistance);
+        auto bottom = std::pow(sampleRate, normalizeSkew) * std::log10(sampleRate);
+
+        auto sampleRateCutoff = (top / bottom) * sampleRate;
+        if (skewValue == 0)
+            sampleRateCutoff = currentDistance;
+
+        sampleRateCutoff = std::floor(sampleRateCutoff);
+        auto numSamples = sampleRateCutoff - sampleRateHolder;
+        chopSizes.push_back(numSamples);
+        sampleRateHolder = sampleRateCutoff;
+    }
+
+    return chopSizes;
 }
 
 juce::String ChopChopAudioProcessor::getNewFileName()
