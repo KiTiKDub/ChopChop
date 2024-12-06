@@ -15,7 +15,7 @@
 struct dragAndDropComp : public juce::Component, public juce::FileDragAndDropTarget
 {
     dragAndDropComp(ChopChopAudioProcessor&);
-    ~dragAndDropComp();
+    ~dragAndDropComp() override;
 
     void paint(juce::Graphics& g) override;
     void resized() override;

@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.24)
 if(APPLE)
     set(FORMATS Standalone AU VST3)
 elseif(LINUX)
-        set(CMAKE_CXX_COMPILER "g++")
-        set(FORMATS Standalone LV2 VST3)
+    set(CMAKE_CXX_COMPILER "g++")
+    set(FORMATS Standalone LV2 VST3)
 else()
     set(FORMATS Standalone VST3)
 endif()
@@ -50,7 +50,7 @@ set(SourceFiles
 juce_add_plugin(${PROJECT_NAME}
         COMPANY_NAME "KiTiK Music"
         IS_SYNTH FALSE
-        NEEDS_MIDI_INPUT FALSE
+        NEEDS_MIDI_INPUT TRUE
         NEEDS_MIDI_OUTPUT FALSE
         IS_MIDI_EFFECT FALSE
         EDITOR_WANTS_KEYBOARD_FOCUS FALSE
