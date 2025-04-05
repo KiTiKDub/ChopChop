@@ -218,72 +218,123 @@ void ChopChopAudioProcessor::chopFile()
     float increment = 1 / (float)fadeLength;
 
     int length = static_cast<int>(reader->lengthInSamples);
-    int i = 0;
-    int j = 0;
+    int chopSampleIndex = 0;
+    int chopNumber = 0;
 
     auto chopSizes = getChopSpaces();
     
     auto ratio = length/getSampleRate();
     
     holder.clear();
-    holder.setSize(1, chopSizes[j] * ratio);
+    holder.setSize(2, chopSizes[chopNumber] * ratio);
     audioBuffers.clear();
 
     //I need to rewrite this so that chops are even accorss both channels
-    
-    //Break sample into sections
-    for(int k = 0; k < waveform.getNumChannels(); k++)
+    for(int channel = 0; channel < waveform.getNumChannels(); channel++)
     {
-        auto waveformReader = waveform.getReadPointer(k);
+        auto waveformReader = waveform.getReadPointer(channel);
+
         for (int s = 0; s < length; s++)
         {
-            holder.addSample(0, i, waveformReader[s]);
-            i++;
+            holder.addSample(channel, chopSampleIndex, waveformReader[s]);
+            chopSampleIndex++;
 
-            auto maxSize = std::floor(chopSizes[j]*ratio);
-            if (i == maxSize) //need to floor and all that good stuff
+            auto maxSize = std::floor(chopSizes[chopNumber]*ratio);
+            if (chopSampleIndex == maxSize)
             {
                 audioBuffers.push_back(holder);
                 if(audioBuffers.size() != chopSizes.size())
                 {
                     holder.clear();
-                    j++;
-                    holder.setSize(1, chopSizes[j]*ratio);
-                    i = 0;
+                    chopNumber++;
+                    holder.setSize(2, chopSizes[chopNumber]*ratio);
+                    chopSampleIndex = 0;
                 }
                 else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
             }
         }
-        i = 0;
-        j = 0;
-        holder.clear();
+    }
+
+    //Shuffle
+    auto rd = std::random_device{};
+    auto rng = std::default_random_engine{ rd() };
+    std::shuffle(audioBuffers.begin(), audioBuffers.end(), rng);
+
+    waveform.clear();
+    int startPosition = 0;
+
+    for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
+    {
+        auto bufferLength = audioBuffers[buffer].getNumSamples();
         
-        //Shuffle
-        auto rd = std::random_device{};
-        auto rng = std::default_random_engine{ rd() };
-        std::shuffle(audioBuffers.begin(), audioBuffers.end(), rng);
-
-        waveform.clear();
-        int totalLength = 0;
-
-        //piece back together
-        for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
+        //Add Fade ins and outs
+        for(int channel = 0; channel < audioBuffers[buffer].getNumChannels(); channel++)
         {
-            auto read = audioBuffers[buffer].getWritePointer(0);
-            auto bufferLength = audioBuffers[buffer].getNumSamples();
-
-            //Add Fade ins and outs
+            auto read = audioBuffers[buffer].getWritePointer(channel);
             for (int i = 0; i < fadeLength; i++)
             {
                 read[i] = read[i] * i * increment;
                 read[bufferLength - i - 1] = read[bufferLength - i - 1] * i * increment;
             }
-
-            waveform.addFrom(k, totalLength, audioBuffers[buffer], 0, 0, bufferLength);
-            totalLength += bufferLength;
+            waveform.addFrom(channel, startPosition, audioBuffers[buffer], channel, 0, bufferLength);
         }
-        audioBuffers.clear();
+        //move start position for next buffer
+        startPosition += bufferLength;
     }
+    
+    // //Break sample into sections
+    // for(int k = 0; k < waveform.getNumChannels(); k++)
+    // {
+    //     auto waveformReader = waveform.getReadPointer(k);
+    //     for (int s = 0; s < length; s++)
+    //     {
+    //         holder.addSample(0, chopSampleIndex, waveformReader[s]);
+    //         chopSampleIndex++;
+
+    //         auto maxSize = std::floor(chopSizes[chopNumber]*ratio);
+    //         if (chopSampleIndex == maxSize) //need to floor and all that good stuff
+    //         {
+    //             audioBuffers.push_back(holder);
+    //             if(audioBuffers.size() != chopSizes.size())
+    //             {
+    //                 holder.clear();
+    //                 chopNumber++;
+    //                 holder.setSize(1, chopSizes[chopNumber]*ratio);
+    //                 chopSampleIndex = 0;
+    //             }
+    //             else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
+    //         }
+    //     }
+    //     chopSampleIndex = 0;
+    //     chopNumber = 0;
+    //     holder.clear();
+        
+    //     //Shuffle
+    //     auto rd = std::random_device{};
+    //     auto rng = std::default_random_engine{ rd() };
+    //     std::shuffle(audioBuffers.begin(), audioBuffers.end(), rng);
+
+    //     waveform.clear();
+    //     int totalLength = 0;
+
+    //     //piece back together
+    //     for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
+    //     {
+    //         auto read = audioBuffers[buffer].getWritePointer(0);
+    //         auto bufferLength = audioBuffers[buffer].getNumSamples();
+
+    //         //Add Fade ins and outs
+    //         for (int i = 0; i < fadeLength; i++)
+    //         {
+    //             read[i] = read[i] * i * increment;
+    //             read[bufferLength - i - 1] = read[bufferLength - i - 1] * i * increment;
+    //         }
+
+    //         waveform.addFrom(k, totalLength, audioBuffers[buffer], 0, 0, bufferLength);
+    //         totalLength += bufferLength;
+    //     }
+    //     audioBuffers.clear();
+    // }
 
     auto fileName = getNewFileName();
     writeChoppedFile(fileName);
@@ -301,6 +352,8 @@ juce::File ChopChopAudioProcessor::getNewFileLocation()
     auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("Application Support").getChildFile("KiTiK Music");
     #elif JUCE_MAC
     auto kitikFolder  = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("KiTiK Music");
+    #elif JUCE_LINUX
+    auto kitikFolder = juce::File::getSpecialLocation(juce::File::commonApplicationDataDirectory).getChildFile("KiTiK Music");
     #endif
 
     auto pluginFolder = kitikFolder.getChildFile("ChopChop");
