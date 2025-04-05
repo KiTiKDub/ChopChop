@@ -200,8 +200,8 @@ void ChopChopAudioProcessor::loadFile(const juce::String& path)
     filesLoaded++;
 
     int length = static_cast<int>(reader->lengthInSamples);
-    waveform.setSize(1,length);
-    reader->read(&waveform, 0, length, 0, true, false);
+    waveform.setSize(2,length);
+    auto success = reader->read(&waveform, 0, length, 0, true, true);
 
     juce::BigInteger range;
     range.setRange(0, 128, true);
@@ -221,60 +221,68 @@ void ChopChopAudioProcessor::chopFile()
     int i = 0;
     int j = 0;
 
-    auto waveformReader = waveform.getReadPointer(0);
     auto chopSizes = getChopSpaces();
-    //int seperate = length / chops->get(); //need to update this based on skew
-
+    
     auto ratio = length/getSampleRate();
-
+    
     holder.clear();
     holder.setSize(1, chopSizes[j] * ratio);
     audioBuffers.clear();
 
-    //Break sample into sections
-    for (int s = 0; s < length; s++)
-    {
-        holder.addSample(0, i, waveformReader[s]);
-        i++;
-
-        auto maxSize = std::floor(chopSizes[j]*ratio);
-        if (i == maxSize) //need to floor and all that good stuff
-        {
-            audioBuffers.push_back(holder);
-            if(audioBuffers.size() != chopSizes.size())
-            {
-                holder.clear();
-                j++;
-                holder.setSize(1, chopSizes[j]*ratio);
-                i = 0;
-            }
-            else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
-        }
-    }
+    //I need to rewrite this so that chops are even accorss both channels
     
-    //Shuffle
-    auto rd = std::random_device{};
-    auto rng = std::default_random_engine{ rd() };
-    std::shuffle(audioBuffers.begin(), audioBuffers.end(), rng);
-
-    waveform.clear();
-    int totalLength = 0;
-
-    //piece back together
-    for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
+    //Break sample into sections
+    for(int k = 0; k < waveform.getNumChannels(); k++)
     {
-        auto read = audioBuffers[buffer].getWritePointer(0);
-        auto bufferLength = audioBuffers[buffer].getNumSamples();
-
-        //Add Fade ins and outs
-        for (int i = 0; i < fadeLength; i++)
+        auto waveformReader = waveform.getReadPointer(k);
+        for (int s = 0; s < length; s++)
         {
-            read[i] = read[i] * i * increment;
-            read[bufferLength - i - 1] = read[bufferLength - i - 1] * i * increment;
-        }
+            holder.addSample(0, i, waveformReader[s]);
+            i++;
 
-        waveform.addFrom(0, totalLength, audioBuffers[buffer], 0, 0, bufferLength); // length*buffer only works if linear, need alt way to do this.
-        totalLength += bufferLength;
+            auto maxSize = std::floor(chopSizes[j]*ratio);
+            if (i == maxSize) //need to floor and all that good stuff
+            {
+                audioBuffers.push_back(holder);
+                if(audioBuffers.size() != chopSizes.size())
+                {
+                    holder.clear();
+                    j++;
+                    holder.setSize(1, chopSizes[j]*ratio);
+                    i = 0;
+                }
+                else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
+            }
+        }
+        i = 0;
+        j = 0;
+        holder.clear();
+        
+        //Shuffle
+        auto rd = std::random_device{};
+        auto rng = std::default_random_engine{ rd() };
+        std::shuffle(audioBuffers.begin(), audioBuffers.end(), rng);
+
+        waveform.clear();
+        int totalLength = 0;
+
+        //piece back together
+        for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
+        {
+            auto read = audioBuffers[buffer].getWritePointer(0);
+            auto bufferLength = audioBuffers[buffer].getNumSamples();
+
+            //Add Fade ins and outs
+            for (int i = 0; i < fadeLength; i++)
+            {
+                read[i] = read[i] * i * increment;
+                read[bufferLength - i - 1] = read[bufferLength - i - 1] * i * increment;
+            }
+
+            waveform.addFrom(k, totalLength, audioBuffers[buffer], 0, 0, bufferLength);
+            totalLength += bufferLength;
+        }
+        audioBuffers.clear();
     }
 
     auto fileName = getNewFileName();
@@ -358,8 +366,8 @@ void ChopChopAudioProcessor::writeChoppedFile(juce::String& fileName)
         file.deleteFile();
     std::unique_ptr<juce::AudioFormatWriter> writer;
     writer.reset(format.createWriterFor(new juce::FileOutputStream(file),
-        48000.0,
-        1,
+        getSampleRate(),
+        2,
         24,
         {},
         0));
