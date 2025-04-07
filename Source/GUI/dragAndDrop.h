@@ -48,5 +48,7 @@ private:
     }
 
     ChopChopAudioProcessor& audioProcessor;
-    std::vector<float> audioPoints;
+    std::vector<float> audioPointsLeft;
+    std::vector<float> audioPointsRight;
+    juce::AudioBuffer<float> waveformGraph;
 };

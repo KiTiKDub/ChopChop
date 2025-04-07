@@ -230,28 +230,24 @@ void ChopChopAudioProcessor::chopFile()
     audioBuffers.clear();
 
     //I need to rewrite this so that chops are even accorss both channels
-    for(int channel = 0; channel < waveform.getNumChannels(); channel++)
+    for (int s = 0; s < length; s++)
     {
-        auto waveformReader = waveform.getReadPointer(channel);
+        holder.addSample(0, chopSampleIndex, waveform.getReadPointer(0)[s]);
+        holder.addSample(1, chopSampleIndex, waveform.getReadPointer(1)[s]);
+        chopSampleIndex++;
 
-        for (int s = 0; s < length; s++)
+        auto maxSize = std::floor(chopSizes[chopNumber]*ratio);
+        if (chopSampleIndex == maxSize)
         {
-            holder.addSample(channel, chopSampleIndex, waveformReader[s]);
-            chopSampleIndex++;
-
-            auto maxSize = std::floor(chopSizes[chopNumber]*ratio);
-            if (chopSampleIndex == maxSize)
+            audioBuffers.push_back(holder);
+            if(audioBuffers.size() != chopSizes.size())
             {
-                audioBuffers.push_back(holder);
-                if(audioBuffers.size() != chopSizes.size())
-                {
-                    holder.clear();
-                    chopNumber++;
-                    holder.setSize(2, chopSizes[chopNumber]*ratio);
-                    chopSampleIndex = 0;
-                }
-                else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
+                holder.clear();
+                chopNumber++;
+                holder.setSize(2, chopSizes[chopNumber]*ratio);
+                chopSampleIndex = 0;
             }
+            else{break;} //this will lose samples, up to 100, which will average out to about 2 milliseconds of sound for max loss
         }
     }
 
@@ -263,7 +259,7 @@ void ChopChopAudioProcessor::chopFile()
     waveform.clear();
     int startPosition = 0;
 
-    for (int buffer = 0; buffer < audioBuffers.size(); buffer++)
+    for (size_t buffer = 0; buffer < audioBuffers.size(); buffer++)
     {
         auto bufferLength = audioBuffers[buffer].getNumSamples();
         
